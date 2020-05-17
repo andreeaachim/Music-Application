@@ -12,6 +12,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.nio.file.Files;
 
 public class DeleteSongs {
     public static void display(String title, String message) {
@@ -39,30 +40,30 @@ public class DeleteSongs {
                 String name = txtName.getText().toString();
                 File inputFile = new File("songs.txt");
                 File tempFile = new File("temp.txt");
-
+                
                 try {
-                    BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-
                     String lineToRemove = name;
-                    String currentLine = "";
+                    try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                         BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
 
-
-                    while((currentLine = reader.readLine()) != null){
-                        String trimmedLine = currentLine.trim();
-                        if(trimmedLine.equals(lineToRemove)) currentLine = "";
-                        writer.write(currentLine + System.getProperty("line.separator"));
-
+                        String line = null;
+                        while ((line = reader.readLine()) != null) {
+                            if (!line.equals(lineToRemove)) {
+                                writer.write(line);
+                                writer.newLine();
+                            }
+                        }
                     }
-                    tempFile.renameTo(inputFile);
-                    reader.close();
-                    writer.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
+                    if (inputFile.delete()) {
+                        if (!tempFile.renameTo(inputFile)) {
+                            throw new IOException("Error");
+                        }
+                    } else {
+                        throw new IOException("Could ");
+                    }
+                }catch (IOException e){
                     e.printStackTrace();
                 }
-
                 window.close();
             }
         });
